@@ -148,12 +148,12 @@ object Features {
 
   case object HostedChannels extends Feature {
     val rfcName = "Hosted channels"
-    val mandatory = 32972
+    val mandatory = 52972
   }
 
   case object ResizeableHostedChannels extends Feature {
     val rfcName = "Resizeable Hosted channels"
-    val mandatory = 32974
+    val mandatory = 52974
   }
 
   case object TrampolineRouting extends Feature {

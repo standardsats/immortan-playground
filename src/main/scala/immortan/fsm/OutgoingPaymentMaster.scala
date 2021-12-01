@@ -113,6 +113,8 @@ class OutgoingPaymentMaster(val cm: ChannelMaster) extends StateMachine[Outgoing
 
   def doProcess(change: Any): Unit = (change, state) match {
     case (ClearFailures, EXPECTING_PAYMENTS | WAITING_FOR_ROUTE) =>
+      println("ClearFailures")
+      println(state)
       become(data.withFailuresReduced(System.currentTimeMillis), state)
 
     case (send: SendMultiPart, EXPECTING_PAYMENTS | WAITING_FOR_ROUTE) =>

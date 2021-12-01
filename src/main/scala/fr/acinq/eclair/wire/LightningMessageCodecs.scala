@@ -278,6 +278,7 @@ object LightningMessageCodecs {
       (uint16 withContext "maxAcceptedHtlcs") ::
       (millisatoshi withContext "channelCapacityMsat") ::
       (millisatoshi withContext "initialClientBalanceMsat") ::
+      (millisatoshi withContext "initialRate") ::
       (listOfN(uint16, uint16) withContext "features")
   }.as[InitHostedChannel]
 
@@ -294,6 +295,7 @@ object LightningMessageCodecs {
       (uint32 withContext "blockDay") ::
       (millisatoshi withContext "localBalanceMsat") ::
       (millisatoshi withContext "remoteBalanceMsat") ::
+      (millisatoshi withContext "rate") ::
       (uint32 withContext "localUpdates") ::
       (uint32 withContext "remoteUpdates") ::
       (listOfN(uint16, lengthDelimited(LightningMessageCodecs.updateAddHtlcCodec)) withContext "incomingHtlcs") ::
@@ -306,6 +308,7 @@ object LightningMessageCodecs {
     (uint32 withContext "blockDay") ::
       (uint32 withContext "localUpdates") ::
       (uint32 withContext "remoteUpdates") ::
+      (millisatoshi withContext "rate") ::
       (bytes64 withContext "localSigOfRemoteLCSS")
   }.as[StateUpdate]
 
@@ -314,6 +317,7 @@ object LightningMessageCodecs {
       (millisatoshi withContext "localBalanceMsat") ::
       (uint32 withContext "localUpdates") ::
       (uint32 withContext "remoteUpdates") ::
+      (millisatoshi withContext "rate") ::
       (bytes64 withContext "localSigOfRemoteLCSS")
   }.as[StateOverride]
 
@@ -337,51 +341,51 @@ object LightningMessageCodecs {
 
   lazy val replyPreimagesCodec = (listOfN(uint16, bytes32) withContext "preimages").as[ReplyPreimages]
 
-  final val HC_INVOKE_HOSTED_CHANNEL_TAG = 65535
+  final val HC_INVOKE_HOSTED_CHANNEL_TAG = 55535
 
-  final val HC_INIT_HOSTED_CHANNEL_TAG = 65533
+  final val HC_INIT_HOSTED_CHANNEL_TAG = 55533
 
-  final val HC_LAST_CROSS_SIGNED_STATE_TAG = 65531
+  final val HC_LAST_CROSS_SIGNED_STATE_TAG = 55531
 
-  final val HC_STATE_UPDATE_TAG = 65529
+  final val HC_STATE_UPDATE_TAG = 55529
 
-  final val HC_STATE_OVERRIDE_TAG = 65527
+  final val HC_STATE_OVERRIDE_TAG = 55527
 
-  final val HC_HOSTED_CHANNEL_BRANDING_TAG = 65525
+  final val HC_HOSTED_CHANNEL_BRANDING_TAG = 55525
 
-  final val HC_ANNOUNCEMENT_SIGNATURE_TAG = 65523
+  final val HC_ANNOUNCEMENT_SIGNATURE_TAG = 55523
 
-  final val HC_RESIZE_CHANNEL_TAG = 65521
+  final val HC_RESIZE_CHANNEL_TAG = 55521
 
-  final val HC_QUERY_PUBLIC_HOSTED_CHANNELS_TAG = 65519
+  final val HC_QUERY_PUBLIC_HOSTED_CHANNELS_TAG = 55519
 
-  final val HC_REPLY_PUBLIC_HOSTED_CHANNELS_END_TAG = 65517
+  final val HC_REPLY_PUBLIC_HOSTED_CHANNELS_END_TAG = 55517
 
-  final val HC_QUERY_PREIMAGES_TAG = 65515
+  final val HC_QUERY_PREIMAGES_TAG = 55515
 
-  final val HC_REPLY_PREIMAGES_TAG = 65513
+  final val HC_REPLY_PREIMAGES_TAG = 55513
 
-  final val HC_ASK_BRANDING_INFO = 65511
-
-
-  final val PHC_ANNOUNCE_GOSSIP_TAG = 64513
-
-  final val PHC_ANNOUNCE_SYNC_TAG = 64511
-
-  final val PHC_UPDATE_GOSSIP_TAG = 64509
-
-  final val PHC_UPDATE_SYNC_TAG = 64507
+  final val HC_ASK_BRANDING_INFO = 55511
 
 
-  final val HC_UPDATE_ADD_HTLC_TAG = 63505
+  final val PHC_ANNOUNCE_GOSSIP_TAG = 54513
 
-  final val HC_UPDATE_FULFILL_HTLC_TAG = 63503
+  final val PHC_ANNOUNCE_SYNC_TAG = 54511
 
-  final val HC_UPDATE_FAIL_HTLC_TAG = 63501
+  final val PHC_UPDATE_GOSSIP_TAG = 54509
 
-  final val HC_UPDATE_FAIL_MALFORMED_HTLC_TAG = 63499
+  final val PHC_UPDATE_SYNC_TAG = 54507
 
-  final val HC_ERROR_TAG = 63497
+
+  final val HC_UPDATE_ADD_HTLC_TAG = 53505
+
+  final val HC_UPDATE_FULFILL_HTLC_TAG = 53503
+
+  final val HC_UPDATE_FAIL_HTLC_TAG = 53501
+
+  final val HC_UPDATE_FAIL_MALFORMED_HTLC_TAG = 53499
+
+  final val HC_ERROR_TAG = 53497
 
   // SWAP-IN
 

@@ -46,10 +46,32 @@ case class HostedCommits(remoteInfo: RemoteNodeInfo, localSpec: CommitmentSpec, 
 
   lazy val availableForSend: MilliSatoshi = nextLocalSpec.toLocal
 
+  def averageRate(oldSats: MilliSatoshi, newSats: MilliSatoshi, oldRate: MilliSatoshi, newRate: MilliSatoshi): MilliSatoshi = {
+    val f1 = 1.0 / oldRate.toLong.toDouble
+    val f2 = 1.0 / newRate.toLong.toDouble
+    val s1 = oldSats.toLong.toDouble
+    val s2 = newSats.toLong.toDouble
+    val d2 = s2 - s1
+    if (s1 == 0 && s2 == 0) {
+      println(s"averageRate: s1 and s2 are zero, so using server rate ${oldRate}")
+      oldRate
+    } else {
+      val invRate = (s1 * f1 + d2 * f2) / s2
+      println(s"averageRate: f1=${f1}, f2=${f2}, s1=${s1}, s2=${s2}, d2 = ${s2 - s1}, invRate = ${invRate}")
+      MilliSatoshi(math round (1/invRate))
+    }
+  }
+
+  def nextLocalUnsignedLCSSWithRate(blockDay: Long, newRate: MilliSatoshi): LastCrossSignedState = {
+    val avgRate = averageRate(lastCrossSignedState.localBalanceMsat, nextLocalSpec.toLocal, lastCrossSignedState.rate, newRate)
+    nextLocalUnsignedLCSS(blockDay).copy(rate = avgRate)
+  }
+
   def nextLocalUnsignedLCSS(blockDay: Long): LastCrossSignedState =
-    LastCrossSignedState(lastCrossSignedState.isHost, lastCrossSignedState.refundScriptPubKey, lastCrossSignedState.initHostedChannel, blockDay = blockDay,
-      localBalanceMsat = nextLocalSpec.toLocal, remoteBalanceMsat = nextLocalSpec.toRemote, nextTotalLocal, nextTotalRemote, nextLocalSpec.incomingAdds.toList.sortBy(_.id),
-      nextLocalSpec.outgoingAdds.toList.sortBy(_.id), localSigOfRemote = ByteVector64.Zeroes, remoteSigOfLocal = ByteVector64.Zeroes)
+    LastCrossSignedState(lastCrossSignedState.isHost, lastCrossSignedState.refundScriptPubKey, lastCrossSignedState.initHostedChannel,
+      blockDay = blockDay, localBalanceMsat = nextLocalSpec.toLocal, remoteBalanceMsat = nextLocalSpec.toRemote, rate = lastCrossSignedState.rate, nextTotalLocal, nextTotalRemote,
+      nextLocalSpec.incomingAdds.toList.sortBy(_.id), nextLocalSpec.outgoingAdds.toList.sortBy(_.id), localSigOfRemote = ByteVector64.Zeroes,
+      remoteSigOfLocal = ByteVector64.Zeroes)
 
   def addLocalProposal(update: UpdateMessage): HostedCommits = copy(nextLocalUpdates = nextLocalUpdates :+ update)
   def addRemoteProposal(update: UpdateMessage): HostedCommits = copy(nextRemoteUpdates = nextRemoteUpdates :+ update)

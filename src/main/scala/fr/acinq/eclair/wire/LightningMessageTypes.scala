@@ -245,17 +245,27 @@ trait HostedChannelMessage extends LightningMessage
 case class InvokeHostedChannel(chainHash: ByteVector32, refundScriptPubKey: ByteVector, secret: ByteVector = ByteVector.empty) extends HostedChannelMessage
 
 case class InitHostedChannel(maxHtlcValueInFlightMsat: UInt64, htlcMinimumMsat: MilliSatoshi, maxAcceptedHtlcs: Int, channelCapacityMsat: MilliSatoshi,
-                             initialClientBalanceMsat: MilliSatoshi, features: List[Int] = Nil) extends HostedChannelMessage
+                             initialClientBalanceMsat: MilliSatoshi, initialRate: MilliSatoshi, features: List[Int] = Nil) extends HostedChannelMessage
 
 case class HostedChannelBranding(rgbColor: Color, pngIcon: Option[ByteVector], contactInfo: String) extends HostedChannelMessage
 
-case class LastCrossSignedState(isHost: Boolean, refundScriptPubKey: ByteVector, initHostedChannel: InitHostedChannel, blockDay: Long, localBalanceMsat: MilliSatoshi,
-                                remoteBalanceMsat: MilliSatoshi, localUpdates: Long, remoteUpdates: Long, incomingHtlcs: List[UpdateAddHtlc], outgoingHtlcs: List[UpdateAddHtlc],
-                                remoteSigOfLocal: ByteVector64, localSigOfRemote: ByteVector64) extends HostedChannelMessage {
+case class LastCrossSignedState(isHost: Boolean,
+                                refundScriptPubKey: ByteVector,
+                                initHostedChannel: InitHostedChannel,
+                                blockDay: Long,
+                                localBalanceMsat: MilliSatoshi,
+                                remoteBalanceMsat: MilliSatoshi,
+                                rate: MilliSatoshi,
+                                localUpdates: Long,
+                                remoteUpdates: Long,
+                                incomingHtlcs: List[UpdateAddHtlc],
+                                outgoingHtlcs: List[UpdateAddHtlc],
+                                remoteSigOfLocal: ByteVector64,
+                                localSigOfRemote: ByteVector64) extends HostedChannelMessage {
 
   lazy val reverse: LastCrossSignedState =
     copy(isHost = !isHost, localUpdates = remoteUpdates, remoteUpdates = localUpdates,
-      localBalanceMsat = remoteBalanceMsat, remoteBalanceMsat = localBalanceMsat,
+      localBalanceMsat = remoteBalanceMsat, remoteBalanceMsat = localBalanceMsat, rate = rate,
       remoteSigOfLocal = localSigOfRemote, localSigOfRemote = remoteSigOfLocal,
       incomingHtlcs = outgoingHtlcs, outgoingHtlcs = incomingHtlcs)
 
@@ -270,6 +280,7 @@ case class LastCrossSignedState(isHost: Boolean, refundScriptPubKey: ByteVector,
       Protocol.writeUInt32(blockDay, ByteOrder.LITTLE_ENDIAN) ++
       Protocol.writeUInt64(localBalanceMsat.toLong, ByteOrder.LITTLE_ENDIAN) ++
       Protocol.writeUInt64(remoteBalanceMsat.toLong, ByteOrder.LITTLE_ENDIAN) ++
+      Protocol.writeUInt64(rate.toLong, ByteOrder.LITTLE_ENDIAN) ++
       Protocol.writeUInt32(localUpdates, ByteOrder.LITTLE_ENDIAN) ++
       Protocol.writeUInt32(remoteUpdates, ByteOrder.LITTLE_ENDIAN) ++
       inPayments.foldLeft(ByteVector.empty) { case (acc, htlc) => acc ++ htlc } ++
@@ -277,7 +288,7 @@ case class LastCrossSignedState(isHost: Boolean, refundScriptPubKey: ByteVector,
       hostFlag.toByte)
   }
 
-  def stateUpdate: StateUpdate = StateUpdate(blockDay, localUpdates, remoteUpdates, localSigOfRemote)
+  def stateUpdate: StateUpdate = StateUpdate(blockDay, localUpdates, remoteUpdates, rate, localSigOfRemote)
 
   def verifyRemoteSig(pubKey: PublicKey): Boolean = Crypto.verifySignature(hostedSigHash, remoteSigOfLocal, pubKey)
 
@@ -287,9 +298,9 @@ case class LastCrossSignedState(isHost: Boolean, refundScriptPubKey: ByteVector,
   }
 }
 
-case class StateUpdate(blockDay: Long, localUpdates: Long, remoteUpdates: Long, localSigOfRemoteLCSS: ByteVector64) extends HostedChannelMessage
+case class StateUpdate(blockDay: Long, localUpdates: Long, remoteUpdates: Long, rate: MilliSatoshi, localSigOfRemoteLCSS: ByteVector64) extends HostedChannelMessage
 
-case class StateOverride(blockDay: Long, localBalanceMsat: MilliSatoshi, localUpdates: Long, remoteUpdates: Long, localSigOfRemoteLCSS: ByteVector64) extends HostedChannelMessage
+case class StateOverride(blockDay: Long, localBalanceMsat: MilliSatoshi, localUpdates: Long, remoteUpdates: Long, rate: MilliSatoshi, localSigOfRemoteLCSS: ByteVector64) extends HostedChannelMessage
 
 case class AnnouncementSignature(nodeSignature: ByteVector64, wantsReply: Boolean) extends HostedChannelMessage
 

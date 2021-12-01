@@ -13,8 +13,10 @@ import scodec.bits.ByteVector
 // Secret and refund pubKey are supplied externally because they may be different depending if we have a chain wallet or not
 abstract class HCOpenHandler(info: RemoteNodeInfo, peerSpecificSecret: ByteVector32, peerSpecificRefundPubKey: ByteVector, cm: ChannelMaster) {
   val channelId: ByteVector32 = Tools.hostedChanId(info.nodeSpecificPubKey.value, info.nodeId.value)
+  println("HCOpenHandler instantiated")
 
   private val freshChannel = new ChannelHosted {
+    println("HCOpenHandler freshChannel")
     def SEND(msgs: LightningMessage*): Unit = CommsTower.sendMany(msgs.map(LightningMessageCodecs.prepareNormal), info.nodeSpecificPair)
     def STORE(hostedData: PersistentChannelData): PersistentChannelData = cm.chanBag.put(hostedData)
   }
@@ -23,6 +25,7 @@ abstract class HCOpenHandler(info: RemoteNodeInfo, peerSpecificSecret: ByteVecto
   def onFailure(err: Throwable): Unit
 
   private val makeChanListener = new ConnectionListener with ChannelListener { me =>
+    println("HCOpenHandler makeChanListener")
     override def onDisconnect(worker: CommsTower.Worker): Unit = CommsTower.rmListenerNative(info, me)
     override def onOperational(worker: CommsTower.Worker, theirInit: Init): Unit = freshChannel process CMD_SOCKET_ONLINE
     override def onHostedMessage(worker: CommsTower.Worker, message: HostedChannelMessage): Unit = freshChannel process message
